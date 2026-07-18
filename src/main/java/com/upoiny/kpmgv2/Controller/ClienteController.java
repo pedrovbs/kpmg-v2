@@ -7,6 +7,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/clientes")
 @CrossOrigin(origins = "*")
@@ -19,11 +22,29 @@ public class ClienteController {
     }
 
     @GetMapping
-    public Page<Cliente> listar(@RequestParam(required = false) String search, Pageable pageable) {
-        return search == null || search.isBlank()
+    public Map<String, Object> listar(@RequestParam(required = false) String search, Pageable pageable) {
+        Page<Cliente> page = (search == null || search.isBlank())
                 ? service.listar(pageable)
                 : service.pesquisarPorNome(search, pageable);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("clientes", page.getContent());
+        response.put("totalClientes", page.getTotalElements());
+        response.put("clientesNaPagina", page.getNumberOfElements());
+
+        return response;
     }
+
+    @GetMapping("/qtdClientes")
+    public Map<String, Long> qtdClientes() {
+        long total = service.contarClientes();
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("totalClientes", total);
+
+        return response;
+    }
+
 
     @GetMapping("/pesquisar")
     public Page<Cliente> pesquisar(@RequestParam String nome, Pageable pageable) {

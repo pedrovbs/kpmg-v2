@@ -37,6 +37,10 @@ public class ClienteService {
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado."));
     }
 
+    /**Método que retorna a quantidade total de clientes**/
+    public long contarClientes() {
+        return repository.count();
+    }
     /**
      * Busca um cliente pelo CPF.
      */
