@@ -72,6 +72,10 @@ public class ProdutoService {
         return repository.save(produto);
     }
 
+    public long contarProdutos() {
+        return repository.count();
+    }
+
     public void excluir(Long id) {
 
         Produto produto = buscarPorId(id);

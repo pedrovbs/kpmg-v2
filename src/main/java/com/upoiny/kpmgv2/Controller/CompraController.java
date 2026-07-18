@@ -11,6 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/compras")
 @CrossOrigin(origins = "*")
@@ -51,6 +54,16 @@ public class CompraController {
                 ? compraService.listar(pageable)
                 : compraService.pesquisarPorStatus(termo, pageable);
 
+    }
+
+    @GetMapping("/qtdCompras")
+    public Map<String, Long> qtdClientes() {
+        long total = compraService.contarClientes();
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("totalCompras", total);
+
+        return response;
     }
 
     @PutMapping("/{id}")

@@ -225,6 +225,10 @@ public class CompraService {
 
     }
 
+    public long contarClientes() {
+        return compraRepository.count();
+    }
+
     // ======================================
     // Cancelar compra
     // ======================================

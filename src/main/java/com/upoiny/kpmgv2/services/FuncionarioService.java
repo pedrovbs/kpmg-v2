@@ -85,6 +85,10 @@ public class FuncionarioService {
 
     }
 
+    public long contarFuncionarios() {
+        return repository.count();
+    }
+
 
 
 

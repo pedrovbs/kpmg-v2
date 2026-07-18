@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/fornecedores")
 @CrossOrigin(origins = "*")
@@ -38,6 +41,16 @@ public class FornecedorController {
                 pageable
         );
     }
+    @GetMapping("/qtdFornecedores")
+    public Map<String, Long> qtdClientes() {
+        long total = service.contarForncecedores();
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("totalFornecedor", total);
+
+        return response;
+    }
+
 
     @GetMapping("/pesquisar/nome-fantasia")
     public Page<Fornecedor> pesquisarPorNomeFantasia(

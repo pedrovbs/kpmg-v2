@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 
 
 @RestController
@@ -94,6 +96,16 @@ public class FuncionarioController {
     // ============================
     // Pesquisa por nome
     // ============================
+
+    @GetMapping("/qtdFuncionarios")
+    public Map<String, Long> qtdClientes() {
+        long total = service.contarFuncionarios();
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("totalFuncionarios", total);
+
+        return response;
+    }
 
     @GetMapping("/buscar")
     public Page<Funcionario> buscarNome(

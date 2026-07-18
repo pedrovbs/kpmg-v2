@@ -43,6 +43,10 @@ public class FornecedorService {
         );
     }
 
+    public long contarForncecedores() {
+        return repository.count();
+    }
+
     public Fornecedor salvar(Fornecedor fornecedor) {
 
         if (repository.existsByCnpj(fornecedor.getCnpj())) {

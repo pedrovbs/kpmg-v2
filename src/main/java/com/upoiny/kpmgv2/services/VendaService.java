@@ -45,6 +45,10 @@ public class VendaService {
                 .orElseThrow(() -> new RuntimeException("Venda não encontrada."));
     }
 
+    public long contarVendas() {
+        return vendaRepository.count();
+    }
+
     public Page<Venda> listarPorCliente(Cliente cliente, Pageable pageable) {
         return vendaRepository.findByCliente(cliente, pageable);
     }

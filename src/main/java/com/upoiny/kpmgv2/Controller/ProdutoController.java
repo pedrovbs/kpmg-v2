@@ -10,6 +10,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/produtos")
 @CrossOrigin(origins = "*")
@@ -36,6 +39,16 @@ public class ProdutoController {
             Pageable pageable) {
 
         return service.pesquisarPorNome(nome, pageable);
+    }
+
+    @GetMapping("/qtdProdutos")
+    public Map<String, Long> qtdClientes() {
+        long total = service.contarProdutos();
+
+        Map<String, Long> response = new HashMap<>();
+        response.put("totalProdutos", total);
+
+        return response;
     }
 
     @GetMapping("/estoque-baixo")
