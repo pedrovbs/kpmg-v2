@@ -1,17 +1,18 @@
 package com.upoiny.kpmgv2.services;
 
-import com.upoiny.kpmgv2.dto.CompraRequest;
-import com.upoiny.kpmgv2.dto.ItemCompraRequest;
+import com.upoiny.kpmgv2.dto.*;
 import com.upoiny.kpmgv2.entities.*;
 import com.upoiny.kpmgv2.repositories.*;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class CompraService {
@@ -199,20 +200,74 @@ public class CompraService {
     // Consultar todas as compras
     // ======================================
 
-    public Page<Compra> listar(Pageable pageable){
-
-        return compraRepository.findAll(pageable);
-
+    @Transactional
+    public Page<CompraResponse> listar(Pageable pageable) {
+        return compraRepository
+                .findAll(pageable)
+                .map(this::converterParaResponse);
     }
 
-    public Page<Compra> pesquisarPorStatus(String status, Pageable pageable) {
-        return compraRepository.findByStatusContainingIgnoreCase(status, pageable);
+    @Transactional
+    public Page<CompraResponse> pesquisarPorStatus(
+            String status,
+            Pageable pageable
+    ) {
+        return compraRepository
+                .findByStatusContainingIgnoreCase(status, pageable)
+                .map(this::converterParaResponse);
     }
 
+    private CompraResponse converterParaResponse(Compra compra) {
+
+        CompraResponse response = new CompraResponse();
+
+        response.setId(compra.getId());
+        response.setDataCompra(compra.getDataCompra());
+        response.setValorTotal(compra.getValorTotal());
+        response.setStatus(compra.getStatus());
+        response.setObservacoes(compra.getObservacoes());
+
+        if (compra.getFornecedor() != null) {
+            response.setFornecedorId(
+                    compra.getFornecedor().getId()
+            );
+
+            response.setFornecedorNome(
+                    compra.getFornecedor().getNomeFantasia()
+            );
+        }
+
+        if (compra.getFuncionario() != null) {
+            response.setFuncionarioId(
+                    compra.getFuncionario().getId()
+            );
+
+            response.setFuncionarioNome(
+                    compra.getFuncionario().getNome()
+            );
+        }
+
+        return response;
+    }
+
+    public Long contarTotalCompras() {
+        return compraRepository.contarTotalCompras();
+    }
+
+    public List<FornecedorCompraKpiResponse> buscarFornecedoresComMaisCompras() {
+
+        return compraRepository.buscarFornecedoresComMaisCompras();
+    }
     // ======================================
     // Buscar compra por ID
     // ======================================
 
+    public List<ProdutoCompraKpiResponse> buscarProdutosMaisComprados() {
+
+        return compraRepository.buscarProdutosMaisComprados(
+                PageRequest.of(0, 10)
+        );
+    }
     @Transactional
     public Compra buscarPorId(Long id){
 

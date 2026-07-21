@@ -1,5 +1,6 @@
 package com.upoiny.kpmgv2.services;
 
+import com.upoiny.kpmgv2.dto.VendaResponse;
 import com.upoiny.kpmgv2.entities.Categoria;
 import com.upoiny.kpmgv2.entities.Fornecedor;
 import com.upoiny.kpmgv2.entities.Produto;
@@ -31,6 +32,14 @@ public class ProdutoService {
 
         return repository.findByNomeContainingIgnoreCase(nome, pageable);
     }
+    /*public Page<VendaResponse> pesquisar(String termo, Pageable pageable) {
+
+        Long id = Long.valueOf(termo);
+
+        return repository.findById(id, pageable)
+                .map(this::converterParaResponse);
+    }*/
+
 
     public Page<Produto> pesquisarPorCategoria(
             Categoria categoria,

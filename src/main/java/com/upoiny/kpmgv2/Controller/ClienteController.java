@@ -22,17 +22,13 @@ public class ClienteController {
     }
 
     @GetMapping
-    public Map<String, Object> listar(@RequestParam(required = false) String search, Pageable pageable) {
-        Page<Cliente> page = (search == null || search.isBlank())
+    public Page<Cliente> listar(
+            @RequestParam(required = false) String search,
+            Pageable pageable) {
+
+        return (search == null || search.isBlank())
                 ? service.listar(pageable)
                 : service.pesquisarPorNome(search, pageable);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("clientes", page.getContent());
-        response.put("totalClientes", page.getTotalElements());
-        response.put("clientesNaPagina", page.getNumberOfElements());
-
-        return response;
     }
 
     @GetMapping("/qtdClientes")

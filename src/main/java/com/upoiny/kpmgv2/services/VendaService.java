@@ -1,7 +1,6 @@
 package com.upoiny.kpmgv2.services;
 
-import com.upoiny.kpmgv2.dto.ItemVendaRequest;
-import com.upoiny.kpmgv2.dto.VendaRequest;
+import com.upoiny.kpmgv2.dto.*;
 import com.upoiny.kpmgv2.entities.Cliente;
 import com.upoiny.kpmgv2.entities.Funcionario;
 import com.upoiny.kpmgv2.entities.ItemVenda;
@@ -13,10 +12,12 @@ import com.upoiny.kpmgv2.repositories.ProdutoRepository;
 import com.upoiny.kpmgv2.repositories.VendaRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class VendaService {
@@ -36,14 +37,59 @@ public class VendaService {
         this.produtoRepository = produtoRepository;
     }
 
-    public Page<Venda> listar(Pageable pageable) {
-        return vendaRepository.findAll(pageable);
+    public Page<VendaResponse> listar(Pageable pageable) {
+
+        return vendaRepository.findAll(pageable)
+                .map(this::converterParaResponse);
     }
+    private VendaResponse converterParaResponse(Venda venda) {
+
+        List<ItemVendaResponse> itens =
+                venda.getItens()
+                        .stream()
+                        .map(item -> new ItemVendaResponse(
+                                item.getId(),
+                                item.getProduto().getId(),
+                                item.getProduto().getNome(),
+                                item.getQuantidade(),
+                                item.getPrecoUnitario(),
+                                item.getSubtotal()
+                        ))
+                        .toList();
+
+        return new VendaResponse(
+                venda.getId(),
+                venda.getDataVenda(),
+                venda.getValorTotal(),
+                venda.getDesconto(),
+                venda.getValorFinal(),
+                venda.getFormaPagamento(),
+                venda.getStatus(),
+                venda.getObservacoes(),
+                venda.getCliente().getId(),
+                venda.getCliente().getNome(),
+                venda.getFuncionario().getId(),
+                venda.getFuncionario().getNome(),
+                itens
+        );
+    }
+
 
     public Venda buscarPorId(Long id) {
         return vendaRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Venda não encontrada."));
     }
+
+    public VendaResponse buscarPorNumero(Long numeroPedido) {
+
+        Venda venda = vendaRepository.findById(numeroPedido)
+                .orElseThrow(() ->
+                        new RuntimeException("Venda não encontrada.")
+                );
+
+        return converterParaResponse(venda);
+    }
+
 
     public long contarVendas() {
         return vendaRepository.count();
@@ -107,7 +153,7 @@ public class VendaService {
             item.setVenda(venda);
             item.setProduto(produto);
             item.setQuantidade(itemRequest.getQuantidade());
-            item.setValorUnitario(produto.getPrecoVenda());
+            item.setPrecoUnitario(produto.getPrecoVenda());
             item.setSubtotal(subtotal);
             venda.getItens().add(item);
 
@@ -127,6 +173,24 @@ public class VendaService {
         return vendaRepository.save(venda);
     }
 
+    public List<ClienteVendaKpiResponse> buscarClientesQueMaisCompraram() {
+
+        return vendaRepository.buscarClientesQueMaisCompraram(
+                PageRequest.of(0, 1)
+        );
+    }
+
+    public VendaValorKpiResponse buscarResumoFinanceiroVendas() {
+
+        return vendaRepository.buscarResumoFinanceiroVendas();
+    }
+
+    public List<ProdutoVendaKpiResponse> buscarProdutosMaisVendidos() {
+
+        return vendaRepository.buscarProdutosMaisVendidos(
+                PageRequest.of(0, 10)
+        );
+    }
     @Transactional
     public Venda atualizar(Long id, Venda atualizada) {
         Venda venda = buscarPorId(id);
@@ -144,5 +208,16 @@ public class VendaService {
             produtoRepository.save(produto);
         }
         vendaRepository.delete(venda);
+    }
+
+    public ClienteMaiorCompradorDTO obterClienteMaiorComprador() {
+
+        return vendaRepository
+                .findClienteComMaisCompras(PageRequest.of(0, 1))
+                .getContent()
+                .stream()
+                .findFirst()
+                .orElse(null);
+
     }
 }

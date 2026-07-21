@@ -1,13 +1,21 @@
 package com.upoiny.kpmgv2.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 
 @Getter
-@Setter
-public class ItemVendaRequest {
+@AllArgsConstructor
+public class ItemVendaResponse {
+
+    private Long id;
+
     private Long produtoId;
+
+    private String produtoNome;
+
     private Integer quantidade;
+
     private Double precoUnitario;
+
     private Double subtotal;
 }

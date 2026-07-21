@@ -59,4 +59,5 @@ public class Venda {
     )
     private List<ItemVenda> itens = new ArrayList<>();
 
+
 }

@@ -2,6 +2,9 @@ package com.upoiny.kpmgv2.Controller;
 
 
 import com.upoiny.kpmgv2.dto.CompraRequest;
+import com.upoiny.kpmgv2.dto.CompraResponse;
+import com.upoiny.kpmgv2.dto.FornecedorCompraKpiResponse;
+import com.upoiny.kpmgv2.dto.ProdutoCompraKpiResponse;
 import com.upoiny.kpmgv2.entities.Compra;
 import com.upoiny.kpmgv2.services.CompraService;
 
@@ -12,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -44,16 +48,33 @@ public class CompraController {
      * Listar todas as compras
      */
     @GetMapping
-    public Page<Compra> listar(
+    public Page<CompraResponse> listar(
             @RequestParam(required = false) String search,
             @RequestParam(required = false) String status,
             Pageable pageable
-    ){
-        String termo = search == null || search.isBlank() ? status : search;
+    ) {
+        String termo = search == null || search.isBlank()
+                ? status
+                : search;
+
         return termo == null || termo.isBlank()
                 ? compraService.listar(pageable)
                 : compraService.pesquisarPorStatus(termo, pageable);
+    }
 
+    @GetMapping("/kpis/valorTotalCompras")
+    public Map<String, Long> contarTotalCompras() {
+
+        return Map.of(
+                "totalCompras",
+                compraService.contarTotalCompras()
+        );
+    }
+
+    @GetMapping("/kpis/FornecedoresComMaisCompras")
+    public List<FornecedorCompraKpiResponse> buscarFornecedoresComMaisCompras() {
+
+        return compraService.buscarFornecedoresComMaisCompras();
     }
 
     @GetMapping("/qtdCompras")
@@ -64,6 +85,12 @@ public class CompraController {
         response.put("totalCompras", total);
 
         return response;
+    }
+
+    @GetMapping("/kpis/produtos-mais-comprados")
+    public List<ProdutoCompraKpiResponse> buscarProdutosMaisComprados() {
+
+        return compraService.buscarProdutosMaisComprados();
     }
 
     @PutMapping("/{id}")
