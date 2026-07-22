@@ -9,6 +9,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -19,6 +23,7 @@ public class VendaController {
 
     @Autowired
     private VendaService service;
+
 
     @GetMapping
     public Page<VendaResponse> listar(Pageable pageable) {
@@ -34,17 +39,32 @@ public class VendaController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public Venda salvar(@RequestBody VendaRequest venda) {
+
+        System.out.println("========== JSON RECEBIDO ==========");
+
+        System.out.println("Cliente ID: " + venda.getClienteId());
+        System.out.println("Funcionário ID: " + venda.getFuncionarioId());
+        System.out.println("Forma de Pagamento: " + venda.getFormaPagamento());
+        System.out.println("Desconto: " + venda.getDesconto());
+        System.out.println("Observações: " + venda.getObservacoes());
+
+        System.out.println("Itens:");
+
+        if (venda.getItens() != null) {
+            venda.getItens().forEach(item -> {
+                System.out.println(
+                        "Produto ID: " + item.getProdutoId()
+                                + " | Quantidade: " + item.getQuantidade()
+                );
+            });
+        }
+
+        System.out.println("===================================");
+
         return service.realizarVenda(venda);
     }
 
-    @PutMapping("/{id}")
-    public Venda atualizar(
-            @PathVariable Long id,
-            @RequestBody Venda venda) {
 
-        return service.atualizar(id, venda);
-
-    }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
