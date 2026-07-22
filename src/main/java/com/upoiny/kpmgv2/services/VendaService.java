@@ -113,19 +113,51 @@ public class VendaService {
 
     @Transactional
     public Venda realizarVenda(VendaRequest request) {
+
+        // ============================
+        // Validações iniciais
+        // ============================
+
         if (request.getItens() == null || request.getItens().isEmpty()) {
-            throw new RuntimeException("A venda deve possuir ao menos um item.");
-        }
-        if (request.getFormaPagamento() == null || request.getFormaPagamento().isBlank()) {
-            throw new RuntimeException("A forma de pagamento é obrigatória.");
+            throw new RuntimeException(
+                    "A venda deve possuir ao menos um item."
+            );
         }
 
-        Cliente cliente = clienteRepository.findById(request.getClienteId())
-                .orElseThrow(() -> new RuntimeException("Cliente não encontrado."));
-        Funcionario funcionario = funcionarioRepository.findById(request.getFuncionarioId())
-                .orElseThrow(() -> new RuntimeException("Funcionário não encontrado."));
+        if (request.getFormaPagamento() == null
+                || request.getFormaPagamento().isBlank()) {
+
+            throw new RuntimeException(
+                    "A forma de pagamento é obrigatória."
+            );
+        }
+
+        // ============================
+        // Busca Cliente
+        // ============================
+
+        Cliente cliente = clienteRepository.findById(
+                request.getClienteId()
+        ).orElseThrow(() ->
+                new RuntimeException("Cliente não encontrado.")
+        );
+
+        // ============================
+        // Busca Funcionário
+        // ============================
+
+        Funcionario funcionario = funcionarioRepository.findById(
+                request.getFuncionarioId()
+        ).orElseThrow(() ->
+                new RuntimeException("Funcionário não encontrado.")
+        );
+
+        // ============================
+        // Criação da Venda
+        // ============================
 
         Venda venda = new Venda();
+
         venda.setCliente(cliente);
         venda.setFuncionario(funcionario);
         venda.setDataVenda(LocalDateTime.now());
@@ -134,41 +166,131 @@ public class VendaService {
         venda.setObservacoes(request.getObservacoes());
 
         double valorTotal = 0.0;
+
+        // ============================
+        // Processamento dos Itens
+        // ============================
+
         for (ItemVendaRequest itemRequest : request.getItens()) {
-            if (itemRequest.getQuantidade() == null || itemRequest.getQuantidade() <= 0) {
-                throw new RuntimeException("A quantidade do item deve ser maior que zero.");
+
+            // Valida quantidade
+            if (itemRequest.getQuantidade() == null
+                    || itemRequest.getQuantidade() <= 0) {
+
+                throw new RuntimeException(
+                        "A quantidade do item deve ser maior que zero."
+                );
             }
 
-            Produto produto = produtoRepository.findById(itemRequest.getProdutoId())
-                    .orElseThrow(() -> new RuntimeException("Produto não encontrado."));
+            // Busca produto
+            Produto produto = produtoRepository.findById(
+                    itemRequest.getProdutoId()
+            ).orElseThrow(() ->
+                    new RuntimeException("Produto não encontrado.")
+            );
+
+            // Valida preço de venda
             if (produto.getPrecoVenda() == null) {
-                throw new RuntimeException("Produto sem preço de venda cadastrado.");
-            }
-            if (produto.getEstoque() == null || produto.getEstoque() < itemRequest.getQuantidade()) {
-                throw new RuntimeException("Estoque insuficiente para o produto: " + produto.getNome());
+                throw new RuntimeException(
+                        "Produto sem preço de venda cadastrado."
+                );
             }
 
-            double subtotal = produto.getPrecoVenda() * itemRequest.getQuantidade();
+            // Valida estoque
+            if (produto.getEstoque() == null
+                    || produto.getEstoque()
+                    < itemRequest.getQuantidade()) {
+
+                throw new RuntimeException(
+                        "Estoque insuficiente para o produto: "
+                                + produto.getNome()
+                );
+            }
+
+            // ============================
+            // Cálculo do Item
+            // ============================
+
+            double subtotal =
+                    produto.getPrecoVenda()
+                            * itemRequest.getQuantidade();
+
+            // Cria o ItemVenda
             ItemVenda item = new ItemVenda();
+
             item.setVenda(venda);
             item.setProduto(produto);
             item.setQuantidade(itemRequest.getQuantidade());
-            item.setPrecoUnitario(produto.getPrecoVenda());
+
+            // Define o preço unitário do produto
+            item.setPrecoUnitario(
+                    produto.getPrecoVenda()
+            );
+
+            // Define o subtotal
             item.setSubtotal(subtotal);
+
+            // ============================
+            // DEBUG
+            // ============================
+
+            System.out.println(
+                    "DEBUG VENDA -> "
+                            + "Produto ID: "
+                            + produto.getId()
+                            + " | Preço Produto: "
+                            + produto.getPrecoVenda()
+                            + " | Preço Unitário Item: "
+                            + item.getPrecoUnitario()
+                            + " | Subtotal: "
+                            + item.getSubtotal()
+            );
+
+            // Adiciona o item à venda
             venda.getItens().add(item);
 
-            produto.setEstoque(produto.getEstoque() - itemRequest.getQuantidade());
+            // ============================
+            // Atualiza estoque
+            // ============================
+
+            produto.setEstoque(
+                    produto.getEstoque()
+                            - itemRequest.getQuantidade()
+            );
+
             produtoRepository.save(produto);
+
+            // Soma ao total
             valorTotal += subtotal;
         }
 
-        double desconto = request.getDesconto() == null ? 0.0 : request.getDesconto();
+        // ============================
+        // Desconto
+        // ============================
+
+        double desconto =
+                request.getDesconto() == null
+                        ? 0.0
+                        : request.getDesconto();
+
         if (desconto < 0 || desconto > valorTotal) {
-            throw new RuntimeException("O desconto deve estar entre zero e o valor total da venda.");
+            throw new RuntimeException(
+                    "O desconto deve estar entre zero "
+                            + "e o valor total da venda."
+            );
         }
+
+        // ============================
+        // Totais da Venda
+        // ============================
+
         venda.setValorTotal(valorTotal);
         venda.setDesconto(desconto);
         venda.setValorFinal(valorTotal - desconto);
+
+        // ============================
+        // Salva Venda e Itens
+        // ============================
 
         return vendaRepository.save(venda);
     }
