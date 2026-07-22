@@ -114,13 +114,50 @@ public class VendaService {
     @Transactional
     public Venda realizarVenda(VendaRequest request) {
 
-        // ============================
-        // Validações iniciais
-        // ============================
+        System.out.println("========== INÍCIO DA VENDA ==========");
 
-        if (request.getItens() == null || request.getItens().isEmpty()) {
+        // =====================================================
+        // 1. VALIDAR REQUEST
+        // =====================================================
+
+        if (request == null) {
             throw new RuntimeException(
-                    "A venda deve possuir ao menos um item."
+                    "ERRO DEBUG: O objeto VendaRequest está NULL."
+            );
+        }
+
+        System.out.println(
+                "DEBUG REQUEST -> Cliente ID: "
+                        + request.getClienteId()
+                        + " | Funcionário ID: "
+                        + request.getFuncionarioId()
+                        + " | Forma Pagamento: "
+                        + request.getFormaPagamento()
+                        + " | Desconto: "
+                        + request.getDesconto()
+        );
+
+        if (request.getClienteId() == null) {
+            throw new RuntimeException(
+                    "ERRO DEBUG: clienteId está NULL."
+            );
+        }
+
+        if (request.getFuncionarioId() == null) {
+            throw new RuntimeException(
+                    "ERRO DEBUG: funcionarioId está NULL."
+            );
+        }
+
+        if (request.getItens() == null) {
+            throw new RuntimeException(
+                    "ERRO DEBUG: A lista de itens está NULL."
+            );
+        }
+
+        if (request.getItens().isEmpty()) {
+            throw new RuntimeException(
+                    "ERRO DEBUG: A venda não possui itens."
             );
         }
 
@@ -128,33 +165,59 @@ public class VendaService {
                 || request.getFormaPagamento().isBlank()) {
 
             throw new RuntimeException(
-                    "A forma de pagamento é obrigatória."
+                    "ERRO DEBUG: A forma de pagamento está vazia."
             );
         }
 
-        // ============================
-        // Busca Cliente
-        // ============================
+        System.out.println(
+                "DEBUG REQUEST -> Quantidade de itens: "
+                        + request.getItens().size()
+        );
+
+
+        // =====================================================
+        // 2. BUSCAR CLIENTE
+        // =====================================================
 
         Cliente cliente = clienteRepository.findById(
                 request.getClienteId()
         ).orElseThrow(() ->
-                new RuntimeException("Cliente não encontrado.")
+                new RuntimeException(
+                        "ERRO DEBUG: Cliente não encontrado. ID: "
+                                + request.getClienteId()
+                )
         );
 
-        // ============================
-        // Busca Funcionário
-        // ============================
+        System.out.println(
+                "DEBUG CLIENTE -> "
+                        + "ID: " + cliente.getId()
+                        + " | Nome: " + cliente.getNome()
+        );
+
+
+        // =====================================================
+        // 3. BUSCAR FUNCIONÁRIO
+        // =====================================================
 
         Funcionario funcionario = funcionarioRepository.findById(
                 request.getFuncionarioId()
         ).orElseThrow(() ->
-                new RuntimeException("Funcionário não encontrado.")
+                new RuntimeException(
+                        "ERRO DEBUG: Funcionário não encontrado. ID: "
+                                + request.getFuncionarioId()
+                )
         );
 
-        // ============================
-        // Criação da Venda
-        // ============================
+        System.out.println(
+                "DEBUG FUNCIONARIO -> "
+                        + "ID: " + funcionario.getId()
+                        + " | Nome: " + funcionario.getNome()
+        );
+
+
+        // =====================================================
+        // 4. CRIAR VENDA
+        // =====================================================
 
         Venda venda = new Venda();
 
@@ -165,134 +228,510 @@ public class VendaService {
         venda.setStatus("FINALIZADA");
         venda.setObservacoes(request.getObservacoes());
 
+        if (venda.getItens() == null) {
+            throw new RuntimeException(
+                    "ERRO DEBUG: venda.getItens() está NULL."
+            );
+        }
+
+        System.out.println(
+                "DEBUG VENDA -> Venda criada em memória."
+        );
+
+
+        // =====================================================
+        // 5. PROCESSAR ITENS
+        // =====================================================
+
         double valorTotal = 0.0;
 
-        // ============================
-        // Processamento dos Itens
-        // ============================
+        int contadorItem = 0;
 
         for (ItemVendaRequest itemRequest : request.getItens()) {
 
-            // Valida quantidade
-            if (itemRequest.getQuantidade() == null
-                    || itemRequest.getQuantidade() <= 0) {
+            contadorItem++;
 
+            System.out.println(
+                    "========== PROCESSANDO ITEM "
+                            + contadorItem
+                            + " =========="
+            );
+
+
+            // -----------------------------------------------
+            // Validar itemRequest
+            // -----------------------------------------------
+
+            if (itemRequest == null) {
                 throw new RuntimeException(
-                        "A quantidade do item deve ser maior que zero."
+                        "ERRO DEBUG: Item "
+                                + contadorItem
+                                + " está NULL."
                 );
             }
 
-            // Busca produto
+            if (itemRequest.getProdutoId() == null) {
+                throw new RuntimeException(
+                        "ERRO DEBUG: Produto ID do item "
+                                + contadorItem
+                                + " está NULL."
+                );
+            }
+
+            if (itemRequest.getQuantidade() == null) {
+                throw new RuntimeException(
+                        "ERRO DEBUG: Quantidade do item "
+                                + contadorItem
+                                + " está NULL."
+                );
+            }
+
+            if (itemRequest.getQuantidade() <= 0) {
+                throw new RuntimeException(
+                        "ERRO DEBUG: Quantidade inválida no item "
+                                + contadorItem
+                                + ". Quantidade: "
+                                + itemRequest.getQuantidade()
+                );
+            }
+
+
+            System.out.println(
+                    "DEBUG ITEM REQUEST -> "
+                            + "Produto ID: "
+                            + itemRequest.getProdutoId()
+                            + " | Quantidade: "
+                            + itemRequest.getQuantidade()
+            );
+
+
+            // -----------------------------------------------
+            // Buscar Produto
+            // -----------------------------------------------
+
             Produto produto = produtoRepository.findById(
                     itemRequest.getProdutoId()
             ).orElseThrow(() ->
-                    new RuntimeException("Produto não encontrado.")
+                    new RuntimeException(
+                            "ERRO DEBUG: Produto não encontrado. ID: "
+                                    + itemRequest.getProdutoId()
+                    )
             );
 
-            // Valida preço de venda
+
+            System.out.println(
+                    "DEBUG PRODUTO -> "
+                            + "ID: " + produto.getId()
+                            + " | Nome: " + produto.getNome()
+                            + " | Preço Venda: "
+                            + produto.getPrecoVenda()
+                            + " | Estoque: "
+                            + produto.getEstoque()
+            );
+
+
+            // -----------------------------------------------
+            // Validar preço
+            // -----------------------------------------------
+
             if (produto.getPrecoVenda() == null) {
+
                 throw new RuntimeException(
-                        "Produto sem preço de venda cadastrado."
+                        "ERRO DEBUG: Produto "
+                                + produto.getId()
+                                + " está sem preço de venda."
                 );
             }
 
-            // Valida estoque
-            if (produto.getEstoque() == null
-                    || produto.getEstoque()
-                    < itemRequest.getQuantidade()) {
+            if (produto.getPrecoVenda() < 0) {
 
                 throw new RuntimeException(
-                        "Estoque insuficiente para o produto: "
+                        "ERRO DEBUG: Produto "
+                                + produto.getId()
+                                + " possui preço de venda negativo: "
+                                + produto.getPrecoVenda()
+                );
+            }
+
+
+            // -----------------------------------------------
+            // Validar estoque
+            // -----------------------------------------------
+
+            if (produto.getEstoque() == null) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: Produto "
+                                + produto.getId()
+                                + " está com estoque NULL."
+                );
+            }
+
+            if (produto.getEstoque() < itemRequest.getQuantidade()) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: Estoque insuficiente. "
+                                + "Produto: "
                                 + produto.getNome()
+                                + " | Estoque atual: "
+                                + produto.getEstoque()
+                                + " | Quantidade solicitada: "
+                                + itemRequest.getQuantidade()
                 );
             }
 
-            // ============================
-            // Cálculo do Item
-            // ============================
+
+            // =================================================
+            // CALCULAR SUBTOTAL
+            // =================================================
+
+            double precoUnitario = produto.getPrecoVenda();
 
             double subtotal =
-                    produto.getPrecoVenda()
+                    precoUnitario
                             * itemRequest.getQuantidade();
 
-            // Cria o ItemVenda
+
+            System.out.println(
+                    "DEBUG CÁLCULO -> "
+                            + "Preço Unitário: "
+                            + precoUnitario
+                            + " | Quantidade: "
+                            + itemRequest.getQuantidade()
+                            + " | Subtotal: "
+                            + subtotal
+            );
+
+
+            if (Double.isNaN(precoUnitario)
+                    || Double.isInfinite(precoUnitario)) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: Preço unitário inválido: "
+                                + precoUnitario
+                );
+            }
+
+            if (Double.isNaN(subtotal)
+                    || Double.isInfinite(subtotal)) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: Subtotal inválido: "
+                                + subtotal
+                );
+            }
+
+
+            // =================================================
+            // CRIAR ITEM VENDA
+            // =================================================
+
             ItemVenda item = new ItemVenda();
 
             item.setVenda(venda);
             item.setProduto(produto);
             item.setQuantidade(itemRequest.getQuantidade());
-
-            // Define o preço unitário do produto
-            item.setPrecoUnitario(
-                    produto.getPrecoVenda()
-            );
-
-            // Define o subtotal
+            item.setPrecoUnitario(precoUnitario);
             item.setSubtotal(subtotal);
 
-            // ============================
-            // DEBUG
-            // ============================
+
+            // =================================================
+            // VALIDAR ITEM VENDA
+            // =================================================
+
+            if (item.getVenda() == null) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: ItemVenda sem Venda."
+                );
+            }
+
+            if (item.getProduto() == null) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: ItemVenda sem Produto."
+                );
+            }
+
+            if (item.getQuantidade() == null
+                    || item.getQuantidade() <= 0) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: ItemVenda com quantidade inválida."
+                );
+            }
+
+            if (item.getPrecoUnitario() == null) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: ItemVenda com precoUnitario NULL."
+                );
+            }
+
+            if (item.getSubtotal() == null) {
+
+                throw new RuntimeException(
+                        "ERRO DEBUG: ItemVenda com subtotal NULL."
+                );
+            }
+
 
             System.out.println(
-                    "DEBUG VENDA -> "
+                    "DEBUG ITEM VENDA -> "
                             + "Produto ID: "
-                            + produto.getId()
-                            + " | Preço Produto: "
-                            + produto.getPrecoVenda()
-                            + " | Preço Unitário Item: "
+                            + item.getProduto().getId()
+                            + " | Quantidade: "
+                            + item.getQuantidade()
+                            + " | Preço Unitário: "
                             + item.getPrecoUnitario()
                             + " | Subtotal: "
                             + item.getSubtotal()
             );
 
-            // Adiciona o item à venda
+
+            // =================================================
+            // ADICIONAR ITEM À VENDA
+            // =================================================
+
             venda.getItens().add(item);
 
-            // ============================
-            // Atualiza estoque
-            // ============================
+            System.out.println(
+                    "DEBUG LISTA VENDA -> "
+                            + "Quantidade de itens na venda: "
+                            + venda.getItens().size()
+            );
+
+
+            // =================================================
+            // ATUALIZAR ESTOQUE
+            // =================================================
+
+            Integer estoqueAnterior = produto.getEstoque();
 
             produto.setEstoque(
                     produto.getEstoque()
                             - itemRequest.getQuantidade()
             );
 
+            System.out.println(
+                    "DEBUG ESTOQUE -> "
+                            + "Produto ID: "
+                            + produto.getId()
+                            + " | Estoque anterior: "
+                            + estoqueAnterior
+                            + " | Estoque novo: "
+                            + produto.getEstoque()
+            );
+
             produtoRepository.save(produto);
 
-            // Soma ao total
+
+            // =================================================
+            // ATUALIZAR TOTAL
+            // =================================================
+
             valorTotal += subtotal;
+
+            System.out.println(
+                    "DEBUG TOTAL PARCIAL -> "
+                            + "Valor Total: "
+                            + valorTotal
+            );
         }
 
-        // ============================
-        // Desconto
-        // ============================
+
+        // =====================================================
+        // 6. VALIDAR TOTAL
+        // =====================================================
+
+        System.out.println(
+                "========== TOTAL FINAL =========="
+        );
+
+        System.out.println(
+                "DEBUG TOTAL FINAL -> "
+                        + "Valor Total: "
+                        + valorTotal
+        );
+
+        if (valorTotal < 0) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Valor total negativo: "
+                            + valorTotal
+            );
+        }
+
+
+        // =====================================================
+        // 7. DESCONTO
+        // =====================================================
 
         double desconto =
                 request.getDesconto() == null
                         ? 0.0
                         : request.getDesconto();
 
-        if (desconto < 0 || desconto > valorTotal) {
+
+        System.out.println(
+                "DEBUG DESCONTO -> "
+                        + "Desconto recebido: "
+                        + desconto
+                        + " | Valor Total: "
+                        + valorTotal
+        );
+
+
+        if (Double.isNaN(desconto)
+                || Double.isInfinite(desconto)) {
+
             throw new RuntimeException(
-                    "O desconto deve estar entre zero "
-                            + "e o valor total da venda."
+                    "ERRO DEBUG: Desconto inválido: "
+                            + desconto
             );
         }
 
-        // ============================
-        // Totais da Venda
-        // ============================
+        if (desconto < 0) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Desconto negativo: "
+                            + desconto
+            );
+        }
+
+        if (desconto > valorTotal) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Desconto maior que o valor total. "
+                            + "Desconto: "
+                            + desconto
+                            + " | Valor Total: "
+                            + valorTotal
+            );
+        }
+
+
+        // =====================================================
+        // 8. CALCULAR TOTAIS DA VENDA
+        // =====================================================
+
+        double valorFinal =
+                valorTotal - desconto;
+
+
+        System.out.println(
+                "DEBUG VALORES FINAIS -> "
+                        + "Valor Total: "
+                        + valorTotal
+                        + " | Desconto: "
+                        + desconto
+                        + " | Valor Final: "
+                        + valorFinal
+        );
+
 
         venda.setValorTotal(valorTotal);
         venda.setDesconto(desconto);
-        venda.setValorFinal(valorTotal - desconto);
+        venda.setValorFinal(valorFinal);
 
-        // ============================
-        // Salva Venda e Itens
-        // ============================
 
-        return vendaRepository.save(venda);
+        // =====================================================
+        // 9. VALIDAÇÃO FINAL DA VENDA
+        // =====================================================
+
+        if (venda.getCliente() == null) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Venda sem cliente."
+            );
+        }
+
+        if (venda.getFuncionario() == null) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Venda sem funcionário."
+            );
+        }
+
+        if (venda.getItens() == null
+                || venda.getItens().isEmpty()) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Venda sem itens."
+            );
+        }
+
+        if (venda.getValorTotal() == null) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Valor total da venda está NULL."
+            );
+        }
+
+        if (venda.getValorFinal() == null) {
+
+            throw new RuntimeException(
+                    "ERRO DEBUG: Valor final da venda está NULL."
+            );
+        }
+
+
+        // =====================================================
+        // 10. DEBUG FINAL ANTES DO SAVE
+        // =====================================================
+
+        System.out.println(
+                "========== ANTES DO SAVE =========="
+        );
+
+        System.out.println(
+                "DEBUG VENDA FINAL -> "
+                        + "Cliente: "
+                        + venda.getCliente().getId()
+                        + " | Funcionário: "
+                        + venda.getFuncionario().getId()
+                        + " | Itens: "
+                        + venda.getItens().size()
+                        + " | Valor Total: "
+                        + venda.getValorTotal()
+                        + " | Desconto: "
+                        + venda.getDesconto()
+                        + " | Valor Final: "
+                        + venda.getValorFinal()
+        );
+
+        for (ItemVenda item : venda.getItens()) {
+
+            System.out.println(
+                    "DEBUG ITEM FINAL -> "
+                            + "Produto: "
+                            + item.getProduto().getId()
+                            + " | Quantidade: "
+                            + item.getQuantidade()
+                            + " | Preço Unitário: "
+                            + item.getPrecoUnitario()
+                            + " | Subtotal: "
+                            + item.getSubtotal()
+            );
+        }
+
+
+        // =====================================================
+        // 11. SALVAR VENDA
+        // =====================================================
+
+        Venda vendaSalva = vendaRepository.save(venda);
+
+        System.out.println(
+                "========== VENDA SALVA COM SUCESSO =========="
+        );
+
+        System.out.println(
+                "DEBUG VENDA SALVA -> ID: "
+                        + vendaSalva.getId()
+        );
+
+        return vendaSalva;
     }
 
     public List<ClienteVendaKpiResponse> buscarClientesQueMaisCompraram() {
