@@ -110,7 +110,7 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
     VendaValorKpiResponse buscarResumoFinanceiroVendas();
 
 
-    @Query("""
+   /* @Query("""
         SELECT new com.upoiny.kpmgv2.dto.ProdutoVendaKpiResponse(
             p.id,
             p.nome,
@@ -122,8 +122,21 @@ public interface VendaRepository extends JpaRepository<Venda, Long> {
         GROUP BY p.id, p.nome
         ORDER BY SUM(i.quantidade) DESC
     """)
-    List<ProdutoVendaKpiResponse> buscarProdutosMaisVendidos(
+    ProdutoVendaKpiResponse buscarProdutosMaisVendidos(
             Pageable pageable
-    );
+    );*/
+   @Query("""
+    SELECT new com.upoiny.kpmgv2.dto.ProdutoVendaKpiResponse(
+        p.id,
+        p.nome,
+        SUM(i.quantidade),
+        SUM(i.subtotal)
+    )
+    FROM ItemVenda i
+    JOIN i.produto p
+    GROUP BY p.id, p.nome
+    ORDER BY SUM(i.quantidade) DESC
+""")
+   List<ProdutoVendaKpiResponse> buscarProdutosMaisVendidos();
 
 }

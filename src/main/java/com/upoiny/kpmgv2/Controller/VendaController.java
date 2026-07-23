@@ -97,10 +97,12 @@ public class VendaController {
         return service.buscarResumoFinanceiroVendas();
     }
 
-    @GetMapping("/kpis/produtos-mais-vendidos")
-    public List<ProdutoVendaKpiResponse> buscarProdutosMaisVendidos() {
+    @GetMapping("/kpis/produto-mais-vendido")
+    public ResponseEntity<ProdutoVendaKpiResponse> buscarProdutoMaisVendido() {
 
-        return service.buscarProdutosMaisVendidos();
+        return ResponseEntity.ok(
+                service.buscarProdutoMaisVendido()
+        );
     }
 
 }

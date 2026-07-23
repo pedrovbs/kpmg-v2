@@ -746,11 +746,16 @@ public class VendaService {
         return vendaRepository.buscarResumoFinanceiroVendas();
     }
 
-    public List<ProdutoVendaKpiResponse> buscarProdutosMaisVendidos() {
+    public ProdutoVendaKpiResponse buscarProdutoMaisVendido() {
 
-        return vendaRepository.buscarProdutosMaisVendidos(
-                PageRequest.of(0, 10)
-        );
+        List<ProdutoVendaKpiResponse> produtos =
+                vendaRepository.buscarProdutosMaisVendidos();
+
+        if (produtos.isEmpty()) {
+            throw new RuntimeException("Nenhum produto vendido encontrado.");
+        }
+
+        return produtos.get(0);
     }
     @Transactional
     public Venda atualizar(Long id, Venda atualizada) {
