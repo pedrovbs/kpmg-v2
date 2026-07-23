@@ -23,12 +23,12 @@ public class ClienteController {
 
     @GetMapping
     public Page<Cliente> listar(
-            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String q,
             Pageable pageable) {
 
-        return (search == null || search.isBlank())
+        return (q == null || q.isBlank())
                 ? service.listar(pageable)
-                : service.pesquisarPorNome(search, pageable);
+                : service.pesquisarPorNome(q, pageable);
     }
 
     @GetMapping("/qtdClientes")
